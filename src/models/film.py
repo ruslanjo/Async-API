@@ -1,17 +1,14 @@
-import orjson
-
-from pydantic import BaseModel
+from .mixins import BaseMixin
 
 
-def orjson_dumps(v, *, default):
-    return orjson.dumps(v, default=default).decode()
-
-
-class Film(BaseModel):
-    id: str
+class Film(BaseMixin):
     title: str
-    description: str
-
-    class Config:
-        json_loads = orjson.loads
-        json_dumps = orjson_dumps
+    description: str = ''
+    imdb_rating: float = 0.0
+    genre: list[str] = ['']
+    directors: list[dict] = [{}]
+    writers: list[dict] = [{}]
+    actors: list[dict] = [{}]
+    writers_names: list[str] = ['']
+    directors_names: list[str] = ['']
+    actors_names: list[str] = ['']
