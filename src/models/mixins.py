@@ -1,6 +1,5 @@
 import orjson
 
-from uuid import UUID
 from pydantic import BaseModel
 
 
@@ -13,4 +12,4 @@ class BaseMixin(BaseModel):
 
     class Config:
         json_loads = orjson.loads
-        json_dumps = orjson.dumps
+        json_dumps = orjson_dumps
