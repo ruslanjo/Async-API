@@ -3,5 +3,5 @@ from .mixins import BaseMixin
 
 
 class Person(BaseMixin):
-    id: UUID
+    id: str
     full_name: str
