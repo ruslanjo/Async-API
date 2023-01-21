@@ -5,6 +5,7 @@ import uvicorn
 from elasticsearch import AsyncElasticsearch
 from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
+from fastapi_pagination import Page, add_pagination, paginate
 
 from api.v1 import films, genres
 from core import config
