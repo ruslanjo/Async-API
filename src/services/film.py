@@ -26,6 +26,28 @@ class FilmService:
             await self._put_film_to_cache(film)
         return film
 
+    async def search_films(self, query: str, _from: int, size: int) -> Optional[list[Film]]:
+        try:
+            query_body = {
+                        "from": _from,
+                        "size": size,
+                        "query": {
+                            "match": {
+                                "description": {
+                                    "query": '{}'.format(query),
+                                    "fuzziness": "auto"
+                                }
+                            }
+                        }
+                    }
+            films = await self.elastic.search(
+                index="movies",
+                body=query_body
+            )
+        except NotFoundError:
+            return None
+        return [Film(**film['_source']) for film in films['hits']['hits']]
+
     async def _get_film_from_elastic(self, film_id: str) -> Optional[Film]:
         try:
             doc = await self.elastic.get('movies', film_id)
@@ -42,6 +64,26 @@ class FilmService:
 
     async def _put_film_to_cache(self, film: Film):
         await self.redis.set(film.id, film.json(), expire=FILM_CACHE_EXPIRE_IN_SECONDS)
+
+    async def get_films(self, _from: int, size: int, sort: list[dict], filter_genre: str) -> Optional[list[Film]]:
+        try:
+            query_body = {
+                "from": _from,
+                "size": size,
+                "query": {
+                    "match": {
+                        "genre": "Comedy"
+                    },
+                },
+                "sort": sort,
+            }
+            films = await self.elastic.search(
+                index="movies",
+                body=query_body
+            )
+        except NotFoundError:
+            return None
+        return [Film(**film['_source']) for film in films['hits']['hits']]
 
 
 @lru_cache()
