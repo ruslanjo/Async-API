@@ -9,7 +9,6 @@ from .models import Film, FilmShortModel
 router = APIRouter()
 
 
-
 @router.get('', response_model=list[FilmShortModel])
 async def get_films(
         sort: str = Query(default='-imbd_rating'),

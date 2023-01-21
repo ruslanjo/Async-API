@@ -94,6 +94,34 @@ class PersonService:
         films = await self._get_films_by_ids_from_elastic(film_ids)
         return films
 
+    async def search_persons_by_name(self, query: str, page_number: int, page_size: int):
+        page_number = page_number if page_number > 0 else 1
+        from_pagination = (page_number - 1) * page_size
+
+        body = {
+            "from": from_pagination,
+            "size": page_size,
+            "query": {
+                "match": {
+                    "full_name": {
+                        "query": f"{query}",
+                        "auto_generate_synonyms_phrase_query": True,
+                        "fuzziness": "auto"
+                    }
+                }
+            }
+        }
+
+        person_data = await self.elastic.search(index='persons', body=body)
+
+        if not person_data:
+            return None
+
+        person_data = person_data['hits']['hits']
+
+        return [Person(**person['_source']) for person in person_data]
+
+
 
 @lru_cache()
 def get_person_service(
