@@ -8,6 +8,7 @@ from fastapi import Depends
 from db.elastic import get_elastic
 from db.redis import get_redis
 from models.film import Film
+from services.cache import RedisCache
 
 FILM_CACHE_EXPIRE_IN_SECONDS = 60 * 5
 
@@ -16,6 +17,7 @@ class FilmService:
     def __init__(self, redis: Redis, elastic: AsyncElasticsearch):
         self.redis = redis
         self.elastic = elastic
+        self.cache = RedisCache(redis)
 
     async def get_by_id(self, film_id: str) -> Optional[Film]:
         film = await self._film_from_cache(film_id)
@@ -27,26 +29,45 @@ class FilmService:
         return film
 
     async def search_films(self, query: str, _from: int, size: int) -> Optional[list[Film]]:
-        try:
-            query_body = {
-                        "from": _from,
-                        "size": size,
-                        "query": {
-                            "match": {
-                                "description": {
-                                    "query": '{}'.format(query),
-                                    "fuzziness": "auto"
+        endpoint = 'films/search'
+        query_dict = {
+            'query': query,
+            'from': _from,
+            'page_size': size
+        }
+
+        film_data = await self.cache.get_query_from_cache(endpoint, query_dict, Film)
+
+        if film_data:
+            return film_data
+        else:
+            try:
+                query_body = {
+                            "from": _from,
+                            "size": size,
+                            "query": {
+                                "match": {
+                                    "description": {
+                                        "query": '{}'.format(query),
+                                        "fuzziness": "auto"
+                                    }
                                 }
                             }
                         }
-                    }
-            films = await self.elastic.search(
-                index="movies",
-                body=query_body
-            )
-        except NotFoundError:
-            return None
-        return [Film(**film['_source']) for film in films['hits']['hits']]
+
+                films = await self.elastic.search(
+                    index="movies",
+                    body=query_body
+                )
+            except NotFoundError:
+                return None
+            else:
+                if not films:
+                    return None
+                films = films['hits']['hits']
+                response = [Film(**film['_source']) for film in films]
+                await self.cache.put_query_to_cache(endpoint, query_dict, response, FILM_CACHE_EXPIRE_IN_SECONDS)
+                return response
 
     async def _get_film_from_elastic(self, film_id: str) -> Optional[Film]:
         try:
