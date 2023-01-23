@@ -1,0 +1,68 @@
+version: "3.8"
+
+services:
+  elasticsearch:
+    image: elasticsearch:8.4.1
+    platform: linux/amd64
+    container_name: elasticsearch
+    restart: always
+    ports:
+      - "9200:9200"
+    env_file:
+      - ./.environments.stage/.env.elastic.stage
+    volumes:
+      - ./elasticsearch/data:/usr/share/elasticsearch/data
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:13
+    env_file:
+      - ./.environments.stage/.env.postgres.stage
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data.stage:/var/lib/postgresql/data/
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d movies_database"]
+      interval: 5s
+      retries: 5
+      timeout: 5s
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    volumes:
+      - ./redis:/usr/local/etc/redis
+      - ./redis/dumps/:/data
+    restart: always
+    ports:
+      - "6379:6379"
+
+  etl:
+    build: git@github.com:Vadim3x4/new_admin_panel_sprint_3.git#main:etl
+    container_name: etl
+    restart: always
+    env_file:
+      - .environments.stage/.env.etl.stage
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  async_api:
+    build: ./
+    container_name: async_api
+    restart: always
+    ports:
+      - "8000:8000"
+    env_file:
+      - .environments.stage/.env.async_api.stage
+    depends_on:
+      redis:
+        condition: service_started
+
+volumes:
+  postgres_data.stage:
