@@ -1,20 +1,6 @@
 from pydantic import BaseModel
 
 
-class Film(BaseModel):
-    id: str
-    title: str
-    imdb_rating: float = 0.0
-    description: str = ''
-    genre: list[str] = ['']
-    directors: list[dict] = [{}]
-    writers: list[dict] = [{}]
-    actors: list[dict] = [{}]
-    writers_names: list[str] = ['']
-    directors_names: list[str] = ['']
-    actors_names: list[str] = ['']
-
-
 class FilmShortModel(BaseModel):
     id: str
     title: str
@@ -24,3 +10,10 @@ class FilmShortModel(BaseModel):
 class Genre(BaseModel):
     id: str
     name: str
+
+
+class Person(BaseModel):
+    id: str
+    full_name: str
+    roles: list[str] = ['']
+    film_ids: list[str] = ['']

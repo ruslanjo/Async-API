@@ -5,14 +5,12 @@ from aioredis import Redis
 from elasticsearch import AsyncElasticsearch, NotFoundError
 from fastapi import Depends
 
-from core.config import ELASTIC_REQUEST_SIZE
+from core.config import PERSON_CACHE_EXPIRE_IN_SECONDS
 from db.elastic import get_elastic
 from db.redis import get_redis
 from models.film import Film
 from models.person import Person
 from services.cache import RedisCache
-
-PERSON_CACHE_EXPIRE_IN_SECONDS = 60 * 5
 
 
 class PersonService:
@@ -34,10 +32,11 @@ class PersonService:
 
         return person
 
-    async def get_all(self) -> Optional[list[Person]]:
+    async def get_all(self, _from: int, page_size: int) -> Optional[list[Person]]:
         try:
             body = {
-                'size': ELASTIC_REQUEST_SIZE,
+                'from': _from,
+                'page_size': page_size,
                 'query': {
                     'match_all': {}}
             }
@@ -69,8 +68,12 @@ class PersonService:
     async def _put_person_to_redis(self, person: Person):
         await self.redis.set(key=person.id, value=person.json(), expire=PERSON_CACHE_EXPIRE_IN_SECONDS)
 
-    async def _get_films_by_ids_from_elastic(self, film_ids: list[str]) -> list[Film] | None:
+    async def _get_films_by_ids_from_elastic(self, film_ids: list[str],
+                                             _from: int,
+                                             page_size: int) -> list[Film] | None:
         body = {
+            "from": _from,
+            "page_size": page_size,
             "query": {
                 "terms": {
                     "id": film_ids,
@@ -85,19 +88,18 @@ class PersonService:
 
         return [Film(**film['_source']) for film in matched_films]
 
-    async def get_films_by_person_id(self, person_id: str) -> list[Film] | None:
+    async def get_films_by_person_id(self, person_id: str, page_number: int, page_size: int) -> list[Film] | None:
         person_data = await self.get_by_id(person_id)
         if not person_data:
             return None
 
         film_ids = person_data.film_ids
-        films = await self._get_films_by_ids_from_elastic(film_ids)
+        films = await self._get_films_by_ids_from_elastic(film_ids, page_number, page_size)
         return films
 
-    async def search_persons_by_name(self, query: str, page_number: int, page_size: int):
+    async def search_persons_by_name(self, query: str, _from: int, page_size: int):
         endpoint = 'persons/search'
-        page_number = page_number if page_number > 0 else 1
-        _from = (page_number - 1) * page_size
+
         query_dict = {
             'query': query,
             'from': _from,

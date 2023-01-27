@@ -2,14 +2,16 @@ from http import HTTPStatus
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
+from core.errors_text import http_errors
 from services.film import FilmService, get_film_service
 from .utils import sort_type, Paginator, FilterGenre
-from .models import Film, FilmShortModel
+from models.film import Film
+from .models import FilmShortModel
 
 router = APIRouter()
 
 
-@router.get('', response_model=list[FilmShortModel])
+@router.get('', response_model=list[FilmShortModel], summary='Get all films paginated')
 async def get_films(
         sort: str = Query(default='-imbd_rating'),
         paginator: Paginator = Depends(),
@@ -29,7 +31,7 @@ async def get_films(
     if not films:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
-            detail='films not found'
+            detail=http_errors.get('films_not_found')
         )
 
     return [
@@ -42,7 +44,7 @@ async def get_films(
     ]
 
 
-@router.get('/search', response_model=list[FilmShortModel])
+@router.get('/search', response_model=list[FilmShortModel], summary='Search in films data by text fields')
 async def film_search(
         query: str,
         paginator: Paginator = Depends(),
@@ -58,7 +60,7 @@ async def film_search(
     if not films:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
-            detail='films not found'
+            detail=http_errors.get('films_not_found')
         )
 
     return [
@@ -70,8 +72,7 @@ async def film_search(
         for film in films]
 
 
-
-@router.get('/{film_id}', response_model=Film)
+@router.get('/{film_id}', response_model=Film, summary='Get film from DB by uuid')
 async def film_details(
         film_id: str,
         film_service: FilmService = Depends(get_film_service)
@@ -82,18 +83,7 @@ async def film_details(
 
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
-            detail='film not found'
+            detail=http_errors.get('film_not_found')
         )
 
-    return Film(
-        id=film.id,
-        title=film.title,
-        description=film.description,
-        genre=film.genre,
-        directors=film.directors,
-        writers=film.writers,
-        actors=film.actors,
-        writers_names=film.writers_names,
-        directors_names=film.directors_names,
-        actors_names=film.actors_names,
-    )
+    return Film(**film.dict())
