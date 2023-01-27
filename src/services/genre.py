@@ -5,11 +5,10 @@ from aioredis import Redis
 from elasticsearch import AsyncElasticsearch, NotFoundError
 from fastapi import Depends
 
+from core.config import GENRE_CACHE_EXPIRE_IN_SECONDS
 from db.elastic import get_elastic
 from db.redis import get_redis
 from models.genre import Genre
-
-CACHE_EXPIRE_IN_SECONDS = 60 * 5
 
 
 class GenreService:
@@ -55,7 +54,7 @@ class GenreService:
         return genre
 
     async def _put_genre_to_cache(self, genre: Genre):
-        await self.redis.set(genre.id, genre.json(), expire=CACHE_EXPIRE_IN_SECONDS)
+        await self.redis.set(genre.id, genre.json(), expire=GENRE_CACHE_EXPIRE_IN_SECONDS)
 
 
 @lru_cache()
