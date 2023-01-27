@@ -1,3 +1,15 @@
-* ETL для персон и жанров реализован в репозитории предыдущего спринта: https://github.com/Vadim3x4/new_admin_panel_sprint_3
+# сервис Movies
 
-* Ассинхронное API реализовано в https://github.com/ruslanjo/Async_API_sprint_1
+## Быстрая установка используя make.
+```bash
+make                    - Показать доступные команды
+make load_dump		- Загрузка тестовых данных в базу 
+make run		- Запуск контейнеров 
+make stop		- Выключение контейнера.
+make logs		- Показать логи.
+make rebuild		- ПолнаяПересборка .
+```
+
+
+
+### Используемые технологии: Python 3.10, Redis, ElasticSearch, PostgreSQL, Docker, FastApi.
