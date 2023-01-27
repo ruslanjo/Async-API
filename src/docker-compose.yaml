@@ -20,8 +20,6 @@ services:
     image: postgres:13
     env_file:
       - ./.environments.stage/.env.postgres.stage
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data.stage:/var/lib/postgresql/data/
     healthcheck:
@@ -31,7 +29,7 @@ services:
       timeout: 5s
 
   redis:
-    image: redis:latest
+    image: redis:7.0
     container_name: redis
     volumes:
       - ./redis:/usr/local/etc/redis
