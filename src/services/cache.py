@@ -35,8 +35,7 @@ class RedisCache:
 
         if isinstance(data, list):
             return [model.parse_raw(element) for element in data]
-        else:
-            return model.parse_raw(data)
+        return model.parse_raw(data)
 
     def _prepare_query_params(self, query: dict):
         query_params = []
