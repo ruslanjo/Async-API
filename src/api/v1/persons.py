@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 from core.errors_text import http_errors
 from .models import FilmShortModel, Person
+from .utils import Paginator
 from services.persons import PersonService, get_person_service
 
 router = APIRouter()
@@ -12,11 +13,9 @@ router = APIRouter()
 
 @router.get('/', response_model=list[Person], summary='Get all persons paginated')
 async def get_all(person_service: PersonService = Depends(get_person_service),
-                  page_number: int = 1,
-                  page_size: int = 50) -> list[Person]:
-    page_number = page_number if page_number > 0 else 1
-    _from = (page_number - 1) * page_size
-    persons = await person_service.get_all(_from, page_size)
+                  paginator: Paginator = Depends()) -> list[Person]:
+    _from = (paginator.page_number - 1) * paginator.page_size
+    persons = await person_service.get_all(_from, paginator.page_size)
     if not persons:
         return []
 
@@ -28,12 +27,10 @@ async def get_all(person_service: PersonService = Depends(get_person_service),
 
 @router.get('/search', response_model=list[Person], summary='Search in persons data by text field')
 async def search_persons(query: str,
-                         page_number: int = 1,
-                         page_size: int = 50,
+                         paginator: Paginator = Depends(),
                          person_service: PersonService = Depends(get_person_service)) -> list[Person]:
-    page_number = page_number if page_number > 0 else 1
-    _from = (page_number - 1) * page_size
-    persons = await person_service.search_persons_by_name(query, _from, page_size)
+    _from = (paginator.page_number - 1) * paginator.page_size
+    persons = await person_service.search_persons_by_name(query, _from, paginator.page_size)
     if not persons:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail=http_errors.get('persons_not_found'))
     return persons
@@ -50,13 +47,11 @@ async def get_one(person_id: str, person_service: PersonService = Depends(get_pe
 @router.get('/{person_id}/film', response_model=list[FilmShortModel],
             summary='Get all films, in which person took place')
 async def get_films_by_pid(person_id: str,
-                           page_number: int = 1,
-                           page_size: int = 50,
+                           paginator: Paginator = Depends(),
                            person_service: PersonService = Depends(get_person_service)) -> list[FilmShortModel]:
-    page_number = page_number if page_number > 0 else 1
-    _from = (page_number - 1) * page_size
+    _from = (paginator.page_number - 1) * paginator.page_size
 
-    films = await person_service.get_films_by_person_id(person_id, _from, page_size)
+    films = await person_service.get_films_by_person_id(person_id, _from, paginator.page_size)
     if not films:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail=http_errors.get('films_not_found'))
     return [FilmShortModel(id=film.id, title=film.title, imdb_rating=film.imdb_rating) for film in films]
