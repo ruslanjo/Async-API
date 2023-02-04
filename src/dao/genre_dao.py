@@ -1,3 +1,4 @@
+import abc
 from functools import lru_cache
 from uuid import UUID
 
@@ -10,7 +11,9 @@ from models.genre import Genre
 
 
 class BaseGenreDAO(BaseDAO):
-    pass
+    @abc.abstractmethod
+    async def get_all(self) -> list[Genre] | None:
+        pass
 
 
 class GenreElasticDAO(BaseGenreDAO):

@@ -1,3 +1,4 @@
+import abc
 from functools import lru_cache
 from uuid import UUID
 
@@ -11,27 +12,20 @@ from models.film import Film
 
 
 class BaseFilmDAO(BaseDAO):
+    @abc.abstractmethod
+    async def get_all(self, _from: int, size: int, filter_genre: str, sort: str) -> list[Film] | None:
+        pass
 
-    async def search_films(
-            self,
-            _from: int,
-            size: int,
-            query: str
-    ) -> Optional[Film]:
+    @abc.abstractmethod
+    async def search_films(self, _from: int, size: int, query: str) -> Optional[Film]:
         pass
 
 
 class FilmElasticDAO(BaseFilmDAO):
-    def __init__(
-            self,
-            elastic: AsyncElasticsearch
-    ):
+    def __init__(self, elastic: AsyncElasticsearch):
         self.elastic = elastic
 
-    async def get_by_id(
-            self,
-            film_id: UUID
-    ) -> Film | None:
+    async def get_by_id(self, film_id: UUID) -> Film | None:
 
         try:
             doc = await self.elastic.get(
@@ -74,7 +68,7 @@ class FilmElasticDAO(BaseFilmDAO):
             _from: int,
             size: int,
             query: str
-    ) -> Optional[Film]:
+    ) -> Optional[list[Film]]:
 
         query_body = {
             "from": _from,
