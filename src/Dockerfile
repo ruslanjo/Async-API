@@ -13,7 +13,9 @@ COPY db ./db
 COPY core ./core
 COPY models ./models
 COPY services ./services
+COPY dao ./dao
 COPY api ./api
+COPY tests ./tests
 COPY main.py .
 
 EXPOSE 8000
