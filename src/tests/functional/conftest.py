@@ -1,7 +1,9 @@
+import asyncio
 import json
 import uuid
 
 import aiohttp
+import aioredis
 import pytest
 from elasticsearch import AsyncElasticsearch
 
@@ -68,6 +70,19 @@ def make_get_request():
 
 
 @pytest.fixture
+def make_cache_request():
+    async def inner(key: str):
+        redis = await aioredis.create_redis_pool(('localhost', test_settings.redis_port), minsize=10, maxsize=20)
+        res = await redis.get(key)
+        redis.close()
+        await redis.wait_closed()
+        return res
+    return inner
+
+
+
+
+@pytest.fixture
 def generated_person_data():
     es_data = [{
         'id': str(uuid.uuid4()),
@@ -87,3 +102,15 @@ def generated_person_data():
 
     str_query = '\n'.join(bulk_query) + '\n'
     return str_query
+
+#
+# async def foo():
+#     redis =  await aioredis.create_redis_pool(('localhost', test_settings.redis_port), minsize=10, maxsize=20)
+#     #redis = aioredis.Redis(pool)
+#     await redis.set(key='as', value='fdsf')
+#     v = await redis.get('asfds')
+#     print(v)
+#     redis.close()
+#
+#
+# asyncio.run(foo())
