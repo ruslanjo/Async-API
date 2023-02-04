@@ -1,3 +1,6 @@
+import json
+import uuid
+
 import aiohttp
 import pytest
 from elasticsearch import AsyncElasticsearch
@@ -17,11 +20,12 @@ def es_write_data():
     async def inner(bulk_data: list[dict]):
         es_client = AsyncElasticsearch(hosts=[f'{test_settings.es_host}:{test_settings.es_port}'])
         schema = test_settings.dict()
-        es_client.indices.delete(index='persons')
-        es_client.indices.create(index='persons',
-                                 body={'mappings': schema['es_persons_index'],
-                                       'settings': schema['es_persons_index_settings']}
-                                 )
+        await es_client.indices.delete(index='persons')
+        await es_client.indices.create(index='persons',
+                                       body={
+                                           'mappings': schema['es_persons_index'],
+                                           'settings': schema['es_persons_index_settings']}
+                                       )
 
         response = await es_client.bulk(bulk_data, refresh=True)
 
@@ -41,9 +45,14 @@ def es_write_data():
 
 @pytest.fixture
 def make_get_request():
-    async def inner(endpoint: str, query_data):
+    async def inner(endpoint: str, query_data=None):
         session = aiohttp.ClientSession()
-        url = f'{test_settings.service_url}{endpoint}{query_data["query"]}'
+        url = f'{test_settings.service_url}{endpoint}'
+
+        if query_data and isinstance(query_data, dict):
+            url += '?'
+            for k, v in query_data.items():
+                url += f'{str(k)}={str(v)}'
 
         async with session.get(url) as response:
             body = await response.json()
@@ -56,3 +65,25 @@ def make_get_request():
         return response_obj
 
     return inner
+
+
+@pytest.fixture
+def generated_person_data():
+    es_data = [{
+        'id': str(uuid.uuid4()),
+        'full_name': 'George Lucas',
+        'roles': ['actor', 'director', 'writer'],
+        'film_ids': ["025c58cd-1b7e-43be-9ffb-8571a613579b",
+                     "0312ed51-8833-413f-bff5-0e139c11264a",
+                     "0659e0e6-504e-4482-8aa9-f7530f36cae2"]
+    } for _ in range(60)]
+
+    bulk_query = []
+    for row in es_data:
+        bulk_query.extend([
+            json.dumps({'index': {'_index': 'persons', '_id': row[test_settings.es_id_field]}}),
+            json.dumps(row)
+        ])
+
+    str_query = '\n'.join(bulk_query) + '\n'
+    return str_query
