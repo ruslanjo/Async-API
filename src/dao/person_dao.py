@@ -13,6 +13,10 @@ from models.person import Person
 
 class BasePersonDAO(BaseDAO):
     @abc.abstractmethod
+    async def get_all(self, _from: int, page_size: int) -> list[Person] | None:
+        pass
+
+    @abc.abstractmethod
     async def search_persons_by_name(self, query: str, _from: int, page_size: int):
         pass
 
@@ -30,7 +34,7 @@ class PersonElasticDAO(BasePersonDAO):
         try:
             body = {
                 'from': _from,
-                'page_size': page_size,
+                'size': page_size,
                 'query': {
                     'match_all': {}}
             }
