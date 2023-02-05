@@ -56,7 +56,7 @@ class FilmElasticDAO(BaseFilmDAO):
                 "size": size,
                 "query": {
                     "match": {
-                        "genre": "Comedy"
+                        "genre": f"{filter_genre}"
                     },
                 },
                 "sort": sort,
