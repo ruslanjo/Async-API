@@ -1,15 +1,6 @@
-import datetime
-import uuid
 import json
 
-import aiohttp
 import pytest
-from fastapi import Depends
-
-from models.person import Person
-from services.cache import get_cache, Cache
-
-from elasticsearch import AsyncElasticsearch
 
 test_params = [
     ({'query': 'lucas'}, {'status': 200, 'length': 50}),
@@ -20,11 +11,8 @@ test_params = [
 
 @pytest.mark.parametrize("query_data, expected", test_params)
 @pytest.mark.asyncio
-async def test_search(generated_person_data, es_write_data, make_get_request, query_data, expected):
-    # 1. Генерируем данные для ES
-    str_query = generated_person_data
-    # 2. Загружаем данные в ES
-    await es_write_data(str_query)
+async def test_search(prepare_table_for_test, make_get_request, query_data, expected):
+    await prepare_table_for_test('persons')
     # # 3. Запрашиваем данные из ES по API
     response = await make_get_request('/api/v1/persons/search', query_data)
     # 4. Проверяем ответ
@@ -37,26 +25,18 @@ test_get_all_params = [
     ({'size': 0}, {'status': 200, 'length': 0}),
     ({'number': 10}, {'status': 200, 'length': 0})
 ]
-
-
 @pytest.mark.parametrize("query_data, expected", test_get_all_params)
 @pytest.mark.asyncio
-async def test_get_all(generated_person_data, es_write_data, make_get_request, query_data, expected):
-    # 1. Генерируем данные для ES
-    str_query = generated_person_data
-    # 2. Загружаем данные в ES
-    await es_write_data(str_query)
+async def test_get_all(prepare_table_for_test, make_get_request, query_data, expected):
+    await prepare_table_for_test('persons')
     # 3. Запрашиваем данные из ES по API
     response = await make_get_request('/api/v1/persons/', query_data)
     assert len(response['body']) == expected['length']
 
 
 @pytest.mark.asyncio
-async def test_get_by_id(generated_person_data, es_write_data, make_get_request):
-    # 1. Генерируем данные для ES
-    str_query = generated_person_data
-    # 2. Загружаем данные в ES
-    await es_write_data(str_query)
+async def test_get_by_id(prepare_table_for_test, make_get_request):
+    await prepare_table_for_test('persons')
     # 3. Дёргаем get_all чтобы в дальнейшем обратиться к get_by_id
     endpoint = '/api/v1/persons/'
     all_persons = await make_get_request(endpoint)
@@ -71,12 +51,9 @@ async def test_get_by_id(generated_person_data, es_write_data, make_get_request)
 
 
 @pytest.mark.asyncio
-async def test_get_by_id_from_cache(generated_person_data, es_write_data, make_get_request,
+async def test_get_by_id_from_cache(prepare_table_for_test, make_get_request,
                                     make_cache_request):
-    # 1. Генерируем данные для ES
-    str_query = generated_person_data
-    # 2. Загружаем данные в ES
-    await es_write_data(str_query)
+    await prepare_table_for_test('persons')
     # 3. Дёргаем get_all чтобы в дальнейшем обратиться к get_by_id
     endpoint = '/api/v1/persons/'
     all_persons = await make_get_request(endpoint)
