@@ -4,7 +4,7 @@ from pydantic import BaseSettings, Field
 
 
 class TestSettings(BaseSettings):
-    service_url: str = 'http://127.0.0.1:8000'
+    service_url: str = Field('http://127.0.0.1:8000', env='SERVICE_URL')
 
     redis_host: str = Field('127.0.0.1', env='REDIS_HOST')
     redis_port: str = Field(6379, env='REDIS_PORT')

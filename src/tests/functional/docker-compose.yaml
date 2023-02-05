@@ -15,6 +15,17 @@ services:
       elasticsearch:
         condition: service_started
 
+  tests:
+    image: asyncapi-image
+    env_file:
+      - ../../.environments.stage/.env.async_api.stage
+
+    entrypoint: >
+      sh -c "pip install -r ./tests/functional/requirements.txt
+      && python3 ./tests/functional/utils/wait_for_es.py
+      && python3 ./tests/functional/utils/wait_for_redis.py
+      && pytest ./tests/functional/src"
+
 
   elasticsearch:
     image: elasticsearch:8.4.0

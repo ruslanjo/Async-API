@@ -53,14 +53,14 @@ async def es_client():
 
 @pytest.fixture(scope='session', autouse=True)
 async def aiohttp_session():
-    session = aiohttp.ClientSession()
+    session = aiohttp.ClientSession(trust_env=True)
     yield session
     await session.close()
 
 
 @pytest.fixture(scope='session', autouse=True)
 async def redis_session():
-    redis = await aioredis.create_redis_pool(('localhost', test_settings.redis_port), minsize=10, maxsize=20)
+    redis = await aioredis.create_redis_pool((test_settings.redis_host, test_settings.redis_port), minsize=10, maxsize=20)
     yield redis
     redis.close()
     await redis.wait_closed()
@@ -116,7 +116,7 @@ def make_get_request(aiohttp_session):
             for k, v in query_data.items():
                 url += f'{str(k)}={str(v)}'
 
-        async with aiohttp_session.get(url) as response:
+        async with aiohttp_session.get(url, ssl=False) as response:
             body = await response.json()
             response_obj = {
                 'status': response.status,

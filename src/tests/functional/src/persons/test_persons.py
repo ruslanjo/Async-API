@@ -14,7 +14,7 @@ test_params = [
 async def test_search(prepare_table_for_test, make_get_request, query_data, expected):
     await prepare_table_for_test('persons')
     # # 3. Запрашиваем данные из ES по API
-    response = await make_get_request('/api/v1/persons/search', query_data)
+    response = await make_get_request('/api/v1/persons/search/', query_data)
     # 4. Проверяем ответ
     assert response['status'] == expected['status']
     assert len(response['body']) == expected['length']

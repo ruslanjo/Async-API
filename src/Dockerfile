@@ -4,8 +4,10 @@ WORKDIR /code
 
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
+ENV PYTHONPATH "${PYTHONPATH}:/tests/functional"
 
 COPY requirements.txt .
+
 
 RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
 
