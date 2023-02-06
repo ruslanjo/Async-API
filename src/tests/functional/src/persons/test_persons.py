@@ -25,6 +25,8 @@ test_get_all_params = [
     ({'size': 0}, {'status': 200, 'length': 0}),
     ({'number': 10}, {'status': 200, 'length': 0})
 ]
+
+
 @pytest.mark.parametrize("query_data, expected", test_get_all_params)
 @pytest.mark.asyncio
 async def test_get_all(prepare_table_for_test, make_get_request, query_data, expected):
@@ -32,7 +34,6 @@ async def test_get_all(prepare_table_for_test, make_get_request, query_data, exp
     # 3. Запрашиваем данные из ES по API
     response = await make_get_request('/api/v1/persons/', query_data)
     assert len(response['body']) == expected['length']
-
 
 @pytest.mark.asyncio
 async def test_get_by_id(prepare_table_for_test, make_get_request):

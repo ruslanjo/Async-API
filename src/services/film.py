@@ -56,7 +56,12 @@ class FilmService:
             )
             return films
 
-    async def get_films(self, _from: int, size: int, sort: list[dict], filter_genre: str) -> Optional[list[Film]]:
+    async def get_films(
+            self, _from: int,
+            size: int,
+            sort: list[dict],
+            filter_genre: str
+    ) -> Optional[list[Film]]:
         return await self.dao.get_all(
             _from,
             size,

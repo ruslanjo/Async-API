@@ -40,19 +40,16 @@ class FilmElasticDAO(BaseFilmDAO):
             self,
             _from: int,
             size: int,
-            filter_genre: str,
+            filter_genre,
             sort: str
     ) -> list[Film] | None:
-
+        genre = filter_genre.filter_genre
+        filter_query = {"match": {"genre": f"{genre}"}} if genre else {"match_all": {}}
         try:
             query_body = {
                 "from": _from,
                 "size": size,
-                "query": {
-                    "match": {
-                        "genre": "Comedy"
-                    },
-                },
+                "query": filter_query,
                 "sort": sort,
             }
             films = await self.elastic.search(
@@ -75,7 +72,7 @@ class FilmElasticDAO(BaseFilmDAO):
             "size": size,
             "query": {
                 "match": {
-                    "description": {
+                    "title": {
                         "query": '{}'.format(query),
                         "fuzziness": "auto"
                     }

@@ -11,6 +11,58 @@ from tests.functional.settings import test_settings
 
 
 ####################### DUMMY DATA #######################
+@pytest.fixture
+def generated_genre_data():
+    es_data = [{
+        'id': str(uuid.uuid4()),
+        'name': 'Action',
+        'description': 'desc',
+    } for _ in range(60)]
+
+    bulk_query = []
+    for row in es_data:
+        bulk_query.extend([
+            json.dumps({'index': {'_index': 'genres', '_id': row[test_settings.es_id_field]}}),
+            json.dumps(row)
+        ])
+
+    str_query = '\n'.join(bulk_query) + '\n'
+
+    return str_query
+
+
+@pytest.fixture
+def generated_movie_data():
+    es_data = [{
+        'id': str(uuid.uuid4()),
+        'imdb_rating': 8.5,
+        'genre': ['Action', 'Sci-Fi'],
+        'title': 'The Star',
+        'description': 'New World',
+        'director': ['Stan'],
+        'actors_names': ['Ann', 'Bob'],
+        'writers_names': ['Ben', 'Howard'],
+        'actors': [
+            {'id': '111', 'name': 'Ann'},
+            {'id': '222', 'name': 'Bob'}
+        ],
+        'writers': [
+            {'id': '333', 'name': 'Ben'},
+            {'id': '444', 'name': 'Howard'}
+        ]
+    } for _ in range(60)]
+
+    bulk_query = []
+    for row in es_data:
+        bulk_query.extend([
+            json.dumps({'index': {'_index': 'movies', '_id': row[test_settings.es_id_field]}}),
+            json.dumps(row)
+        ])
+
+    str_query = '\n'.join(bulk_query) + '\n'
+
+    return str_query
+
 
 @pytest.fixture
 def generated_person_data():
@@ -60,10 +112,12 @@ async def aiohttp_session():
 
 @pytest.fixture(scope='session', autouse=True)
 async def redis_session():
-    redis = await aioredis.create_redis_pool((test_settings.redis_host, test_settings.redis_port), minsize=10, maxsize=20)
+    redis = await aioredis.create_redis_pool((test_settings.redis_host, test_settings.redis_port), minsize=10,
+                                             maxsize=20)
     yield redis
     redis.close()
     await redis.wait_closed()
+
 
 ####################### PRE/POST TEST FIXTURES #######################
 
@@ -71,6 +125,7 @@ async def redis_session():
 def delete_table(es_client):
     async def inner(index_name: str):
         await es_client.indices.delete(index=index_name)
+
     return inner
 
 
@@ -90,10 +145,19 @@ def create_table(es_client):
 
 
 @pytest.fixture
-def prepare_table_for_test(es_client, delete_table, create_table, generated_person_data):
+def prepare_table_for_test(
+        es_client,
+        delete_table,
+        create_table,
+        generated_person_data,
+        generated_movie_data,
+        generated_genre_data
+):
     # add new fixture for generated data when ready
     generated_data = {
         'persons': generated_person_data,
+        'movies': generated_movie_data,
+        'genres': generated_genre_data
     }
 
     async def inner(index_name: str):
@@ -120,10 +184,11 @@ def make_get_request(aiohttp_session):
             body = await response.json()
             response_obj = {
                 'status': response.status,
-                'body':  body,
+                'body': body,
             }
 
         return response_obj
+
     return inner
 
 
@@ -132,4 +197,5 @@ def make_cache_request(redis_session):
     async def inner(key: str):
         res = await redis_session.get(key)
         return res
+
     return inner

@@ -36,6 +36,7 @@ class GenreElasticDAO(BaseGenreDAO):
         try:
             docs = await self.elastic.search(
                 index='genres',
+                size=1000,
                 body={
                     'query': {
                         'match_all': {}
