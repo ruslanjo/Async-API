@@ -67,5 +67,3 @@ async def test_get_by_id_from_cache(prepare_table_for_test, make_get_request,
 
     cache_data = await make_cache_request(person_uuid)
     assert json.loads(cache_data).get('id') == person_uuid
-
-
