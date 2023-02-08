@@ -69,7 +69,8 @@ async def film_search(
             title=film.title,
             imdb_rating=film.imdb_rating
         )
-        for film in films]
+        for film in films
+    ]
 
 
 @router.get('/{film_id}', response_model=Film, summary='Get film from DB by uuid')

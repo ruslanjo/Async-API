@@ -22,9 +22,9 @@ async def genre_details(
 
 @router.get('/', response_model=list[Genre], summary='Get all genres from DB')
 async def genre_details(
-        genre_service: GenreService = Depends(get_genre_service)
+        genre_service: GenreService = Depends(get_genre_service),
 ) -> list[Genre]:
-    genres = await genre_service.get_all_genres()
+    genres = await genre_service.get_all()
     if not genres:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail=http_errors.get('genres_not_found'))
     return [Genre(id=genre.id, name=genre.name) for genre in genres]
