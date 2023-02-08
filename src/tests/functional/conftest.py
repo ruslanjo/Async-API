@@ -5,7 +5,7 @@ import uuid
 import aiohttp
 import aioredis
 import pytest
-from elasticsearch import AsyncElasticsearch
+from elasticsearch import AsyncElasticsearch, NotFoundError
 
 from tests.functional.settings import test_settings
 
@@ -124,7 +124,10 @@ async def redis_session():
 @pytest.fixture
 def delete_table(es_client):
     async def inner(index_name: str):
-        await es_client.indices.delete(index=index_name)
+        try:
+            await es_client.indices.delete(index=index_name)
+        except NotFoundError:
+            pass
 
     return inner
 
