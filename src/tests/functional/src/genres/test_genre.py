@@ -1,7 +1,9 @@
+import http
+
 import pytest
 
 test_get_all_params = [
-    ({'size': 60}, {'status': 200, 'length': 60}),
+    ({'size': 60}, {'status': http.HTTPStatus.OK, 'length': 60}),
 ]
 
 
@@ -31,6 +33,6 @@ async def test_get_by_id(
     success_response = await make_get_request(endpoint + genre_uuid)
     unsuccess_response = await make_get_request(endpoint + 'blablblbl')
 
-    assert success_response['status'] == 200
+    assert success_response['status'] == http.HTTPStatus.OK
     assert success_response['body']['id'] == genre_uuid
-    assert unsuccess_response['status'] == 404
+    assert unsuccess_response['status'] == http.HTTPStatus.NOT_FOUND

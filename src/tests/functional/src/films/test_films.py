@@ -1,16 +1,17 @@
+import http
 import json
 
 import pytest
 
 test_get_all_params = [
-    ({'size': 10}, {'status': 200, 'length': 10}),
-    ({'size': 50}, {'status': 200, 'length': 50}),
-    ({'size': 1}, {'status': 200, 'length': 1}),
+    ({'size': 10}, {'status': http.HTTPStatus.OK, 'length': 10}),
+    ({'size': 50}, {'status': http.HTTPStatus.OK, 'length': 50}),
+    ({'size': 1}, {'status': http.HTTPStatus.OK, 'length': 1}),
 ]
 
 test_search_params = [
-    ({'query': 'Star'}, {'status': 200, 'length': 50}),
-    ({'query': 'блаблабла'}, {'status': 404, 'length': 1})
+    ({'query': 'Star'}, {'status': http.HTTPStatus.OK, 'length': 50}),
+    ({'query': 'блаблабла'}, {'status': http.HTTPStatus.NOT_FOUND, 'length': 1})
 ]
 
 
@@ -40,9 +41,9 @@ async def test_get_by_id(
     success_response = await make_get_request(endpoint + film_uuid)
     unsuccess_response = await make_get_request(endpoint + 'blablblbl')
 
-    assert success_response['status'] == 200
+    assert success_response['status'] == http.HTTPStatus.OK
     assert success_response['body']['id'] == film_uuid
-    assert unsuccess_response['status'] == 404
+    assert unsuccess_response['status'] == http.HTTPStatus.NOT_FOUND
 
 
 @pytest.mark.asyncio
@@ -58,7 +59,7 @@ async def test_get_by_id_from_cache(
 
     suc_response = await make_get_request(endpoint + film_uuid)
 
-    if suc_response['status'] != 200:
+    if suc_response['status'] != http.HTTPStatus.OK:
         raise AssertionError('no id returned from server')
 
     cache_data = await make_cache_request(film_uuid)

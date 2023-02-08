@@ -1,10 +1,11 @@
 import json
+import http
 
 import pytest
 
 test_params = [
-    ({'query': 'lucas'}, {'status': 200, 'length': 50}),
-    ({'query': 'блаблабла'}, {'status': 404, 'length': 1})
+    ({'query': 'lucas'}, {'status': http.HTTPStatus.OK, 'length': 50}),
+    ({'query': 'блаблабла'}, {'status': http.HTTPStatus.NOT_FOUND, 'length': 1})
     # len is 1 as for not found {'Detail': Persons not found'} returns
 ]
 
@@ -21,9 +22,9 @@ async def test_search(prepare_table_for_test, make_get_request, query_data, expe
 
 
 test_get_all_params = [
-    ({'size': 10}, {'status': 200, 'length': 10}),
-    ({'size': 0}, {'status': 200, 'length': 0}),
-    ({'number': 10}, {'status': 200, 'length': 0})
+    ({'size': 10}, {'status': http.HTTPStatus.OK, 'length': 10}),
+    ({'size': 0}, {'status': http.HTTPStatus.OK, 'length': 0}),
+    ({'number': 10}, {'status': http.HTTPStatus.OK, 'length': 0})
 ]
 
 
@@ -46,9 +47,9 @@ async def test_get_by_id(prepare_table_for_test, make_get_request):
     suc_response = await make_get_request(endpoint + person_uuid)
     unsuc_response = await make_get_request(endpoint + 'blablblbl')
 
-    assert suc_response['status'] == 200
+    assert suc_response['status'] == http.HTTPStatus.OK
     assert suc_response['body']['id'] == person_uuid
-    assert unsuc_response['status'] == 404
+    assert unsuc_response['status'] == http.HTTPStatus.NOT_FOUND
 
 
 @pytest.mark.asyncio
@@ -62,7 +63,7 @@ async def test_get_by_id_from_cache(prepare_table_for_test, make_get_request,
 
     suc_response = await make_get_request(endpoint + person_uuid)
 
-    if suc_response['status'] != 200:
+    if suc_response['status'] != http.HTTPStatus.OK:
         raise AssertionError('no id returned from server')
 
     cache_data = await make_cache_request(person_uuid)
