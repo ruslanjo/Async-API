@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 
 from core.errors_text import http_errors
 from services.film import FilmService, get_film_service
-from .utils import sort_type, Paginator, FilterGenre
+from .utils import sort_type, FilterGenre
 from models.film import Film
 from .models import FilmShortModel
 
@@ -14,15 +14,16 @@ router = APIRouter()
 @router.get('', response_model=list[FilmShortModel], summary='Get all films paginated')
 async def get_films(
         sort: str = Query(default='-imbd_rating'),
-        paginator: Paginator = Depends(),
         film_service: FilmService = Depends(get_film_service),
         filter_genre: FilterGenre = Depends(),
+        page_size: int = Query(50, alias="page[size]", gt=0),
+        page_number: int = Query(1, alias="page[number]", gt=0)
 ) -> list[FilmShortModel]:
 
-    _from = (paginator.page_number - 1) * paginator.page_size
+    _from = (page_number - 1) * page_size
     films = await film_service.get_films(
         _from=_from,
-        size=paginator.page_size,
+        size=page_size,
         filter_genre=filter_genre,
         sort=await sort_type(
             sorting_type=sort
@@ -47,15 +48,16 @@ async def get_films(
 @router.get('/search', response_model=list[FilmShortModel], summary='Search in films data by text fields')
 async def film_search(
         query: str,
-        paginator: Paginator = Depends(),
+        page_size: int = Query(50, alias="page[size]", gt=0),
+        page_number: int = Query(1, alias="page[number]", gt=0),
         film_service: FilmService = Depends(get_film_service)
 ) -> list[FilmShortModel]:
 
-    _from = (paginator.page_number - 1) * paginator.page_size
+    _from = (page_number - 1) * page_size
     films = await film_service.search_films(
         query=query,
         _from=_from,
-        size=paginator.page_size,
+        size=page_size,
     )
     if not films:
         raise HTTPException(

@@ -3,15 +3,15 @@ import time
 from redis import Redis, ConnectionError
 
 from tests.functional.settings import test_settings
+from external_connection import backoff
 
-redis = Redis(host=test_settings.redis_host, port=test_settings.redis_port, socket_connect_timeout=1)
 
-while True:
-    try:
-        redis.ping()
-    except (ConnectionRefusedError, ConnectionError):
-        print(f'No connection to redis {test_settings.redis_host}:{test_settings.redis_port}, waiting')
-        time.sleep(1)
-    else:
-        break
+@backoff()
+def ping_redis():
+    print('pinging redis')
+    redis = Redis(host=test_settings.redis_host, port=test_settings.redis_port, socket_connect_timeout=1)
+    redis.ping()
 
+
+if __name__ == '__main__':
+    ping_redis()

@@ -22,4 +22,4 @@ COPY main.py .
 
 EXPOSE 8000
 
-CMD ["python3", "main.py"]
+CMD ["gunicorn", "main:app", "--bind", "0.0.0.0:8000", "-k", "uvicorn.workers.UvicornWorker"]
