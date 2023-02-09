@@ -3,7 +3,7 @@ import time
 from redis import Redis, ConnectionError
 
 from tests.functional.settings import test_settings
-from .external_connection import backoff
+from external_connection import backoff
 
 
 @backoff()

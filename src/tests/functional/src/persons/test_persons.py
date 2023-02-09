@@ -22,9 +22,9 @@ async def test_search(prepare_table_for_test, make_get_request, query_data, expe
 
 
 test_get_all_params = [
-    ({'size': 10}, {'status': http.HTTPStatus.OK, 'length': 10}),
-    ({'size': 0}, {'status': http.HTTPStatus.OK, 'length': 0}),
-    ({'number': 10}, {'status': http.HTTPStatus.OK, 'length': 0})
+    ({'page[size]': 10}, {'status': http.HTTPStatus.OK, 'length': 10}),
+    ({'page[size]': 1}, {'status': http.HTTPStatus.OK, 'length': 1}),
+    ({'page[number]': 10}, {'status': http.HTTPStatus.OK, 'length': 0})
 ]
 
 
@@ -35,6 +35,7 @@ async def test_get_all(prepare_table_for_test, make_get_request, query_data, exp
     # 3. Запрашиваем данные из ES по API
     response = await make_get_request('/api/v1/persons/', query_data)
     assert len(response['body']) == expected['length']
+
 
 @pytest.mark.asyncio
 async def test_get_by_id(prepare_table_for_test, make_get_request):

@@ -3,7 +3,7 @@ import time
 from elasticsearch import Elasticsearch
 
 from tests.functional.settings import test_settings
-from .external_connection import backoff
+from external_connection import backoff
 es_host, es_port = test_settings.es_host, test_settings.es_port
 
 

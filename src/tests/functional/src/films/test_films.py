@@ -4,9 +4,9 @@ import json
 import pytest
 
 test_get_all_params = [
-    ({'size': 10}, {'status': http.HTTPStatus.OK, 'length': 10}),
-    ({'size': 50}, {'status': http.HTTPStatus.OK, 'length': 50}),
-    ({'size': 1}, {'status': http.HTTPStatus.OK, 'length': 1}),
+    ({'page[size]': 10}, {'status': http.HTTPStatus.OK, 'length': 10}),
+    ({'page[size]': 50}, {'status': http.HTTPStatus.OK, 'length': 50}),
+    ({'page[size]': 1}, {'status': http.HTTPStatus.OK, 'length': 1}),
 ]
 
 test_search_params = [
